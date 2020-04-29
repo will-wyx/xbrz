@@ -5,9 +5,60 @@
     <title>Title</title>
 </head>
 <body>
+<canvas id="canvas"></canvas>
+<canvas id="canvas5x"></canvas>
 <script type="module">
     import {scaleImage} from './src/xBRZ.js'
-    scaleImage()
+    // scaleImage()
+
+    const canvas = document.querySelector('#canvas');
+    const ctx = canvas.getContext('2d');
+
+    const canvas5x = document.querySelector('#canvas5x');
+    const ctx5x = canvas5x.getContext('2d');
+
+    const srcImage = new Image();
+    srcImage.src = './ok.png';
+    srcImage.onload = () => {
+        const {width, height} = srcImage;
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(srcImage, 0, 0, width, height);
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const buffer = Array.from(imageData.data);
+        let pixels = [];
+        for (let i = 0, len = buffer.length; i < len; i += 4) {
+            const r = buffer[i];
+            const g = buffer[i + 1];
+            const b = buffer[i + 2];
+            const a = buffer[i + 3];
+            const pixel = r | g << 8 | b << 16 | a << 24;
+            pixels.push(pixel)
+        }
+        let tar = [];
+        scaleImage(pixels, tar, width, height, 0, height);
+
+        let buffer5x = [];
+        for (let i = 0, len = tar.length; i < len; ++i) {
+            const pixel = tar[i];
+            const r = pixel & 0xff;
+            const g = (pixel >> 8) & 0xff;
+            const b = (pixel >> 16) & 0xff;
+            const a = (pixel >> 24) & 0xff;
+            buffer5x.push(r);
+            buffer5x.push(g);
+            buffer5x.push(b);
+            buffer5x.push(a);
+        }
+
+        const width5x = width * 5;
+        const height5x = height * 5;
+        canvas5x.width = width5x;
+        canvas5x.height = height5x;
+        const img5xBuffer = new Uint8ClampedArray(buffer5x);
+        const img5xData = new ImageData(img5xBuffer, width5x, height5x);
+        ctx5x.putImageData(img5xData, 0, 0)
+    }
 </script>
 </body>
 </html>

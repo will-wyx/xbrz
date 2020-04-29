@@ -37,58 +37,151 @@ class BlendResult {
     }
 }
 
-class Rot {
-    constructor() {
-        /*
-        |0|6|8|2|1|3|
-        |7|5|2|0|6|8|
-        |3|8|5|1|4|4|
-        |4|4|5|1|3|7|
-        |6|8|2|0|7|5|
-        |1|3|8|2|0|7|
-         */
-        this.arr = []
+const maxRots = 4;
+const maxScale = 5;
+const maxScaleSq = maxScale * maxScale;
+
+class OutputMatrix {
+    constructor(scale, out, outWidth) {
+        this.out = new IntPtr(out);
+        this.n = (scale - 2) * (maxRots * maxScaleSq);
+        this.outWidth = outWidth;
+        this.outi = 0;
+        this.nr = 0
     }
 
-    init() {
-        const
-            a = 0, b = 1, c = 2,
-            d = 3, e = 4, f = 5,
-            g = 6, h = 7, i = 8;
+    move(rotDeg, outi) {
+        this.nr = this.n + rotDeg * maxScaleSq;
+        this.outi = outi;
+    }
 
-        const deg0 = [
-            a, b, c,
-            d, e, f,
-            g, h, i
-        ];
-
-        const deg90 = [
-            g, d, a,
-            h, e, b,
-            i, f, c
-        ];
-
-        const deg180 = [
-            i, h, g,
-            f, e, d,
-            c, b, a
-        ];
-
-        const deg270 = [
-            c, f, i,
-            b, e, h,
-            a, d, g
-        ];
-
-        const rotation = [
-            deg0, deg90, deg180, deg270
-        ];
-
-        for (let rotDeg = 0; rotDeg < 4; rotDeg++)
-            for (let x = 0; x < 9; x++)
-                this.arr[(x << 2) + rotDeg] = rotation[rotDeg][x];
+    ref(i, j) {
+        i = parseInt(i);
+        j = parseInt(j);
+        const rot = matrixRotation[this.nr + i * maxScale + j];
+        this.out.position(this.outi + rot.J + rot.I * this.outWidth);
+        return this.out;
     }
 }
+
+class Scaler {
+    constructor() {
+        this.scale = 5;
+    }
+
+    scale() {
+        return this.scale
+    }
+
+    blendLineShallow(col, out) {
+        alphaBlend(1, 4, out.ref(this.scale - 1, 0), col);
+        alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
+        alphaBlend(1, 4, out.ref(this.scale - 3, 4), col);
+        alphaBlend(3, 4, out.ref(this.scale - 1, 1), col);
+        alphaBlend(3, 4, out.ref(this.scale - 2, 3), col);
+        out.ref(this.scale - 1, 2).set(col);
+        out.ref(this.scale - 1, 3).set(col);
+        out.ref(this.scale - 1, 4).set(col);
+        out.ref(this.scale - 2, 4).set(col);
+    }
+
+    blendLineSteep(col, out) {
+        alphaBlend(1, 4, out.ref(0, this.scale - 1), col);
+        alphaBlend(1, 4, out.ref(2, this.scale - 2), col);
+        alphaBlend(1, 4, out.ref(4, this.scale - 3), col);
+        alphaBlend(3, 4, out.ref(1, this.scale - 1), col);
+        alphaBlend(3, 4, out.ref(3, this.scale - 2), col);
+        out.ref(2, this.scale - 1).set(col);
+        out.ref(3, this.scale - 1).set(col);
+        out.ref(4, this.scale - 1).set(col);
+        out.ref(4, this.scale - 2).set(col);
+    }
+
+    blendLineSteepAndShallow(col, out) {
+        alphaBlend(1, 4, out.ref(0, this.scale - 1), col);
+        alphaBlend(1, 4, out.ref(2, this.scale - 2), col);
+        alphaBlend(3, 4, out.ref(1, this.scale - 1), col);
+        alphaBlend(1, 4, out.ref(this.scale - 1, 0), col);
+        alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
+        alphaBlend(3, 4, out.ref(this.scale - 1, 1), col);
+        out.ref(2, this.scale - 1).set(col);
+        out.ref(3, this.scale - 1).set(col);
+        out.ref(this.scale - 1, 2).set(col);
+        out.ref(this.scale - 1, 3).set(col);
+        alphaBlend(2, 3, out.ref(3, 3), col)
+    }
+
+    blendLineDiagonal(col, out) {
+        alphaBlend(1, 8, out.ref(this.scale - 1, this.scale / 2), col);
+        alphaBlend(1, 8, out.ref(this.scale - 2, this.scale / 2 + 1), col);
+        alphaBlend(1, 8, out.ref(this.scale - 3, this.scale / 2 + 2), col);
+        alphaBlend(7, 8, out.ref(4, 3), col);
+        alphaBlend(7, 8, out.ref(3, 4), col);
+        out.ref(4, 4).set(col)
+    }
+
+    blendCorner(col, out) {
+        alphaBlend(86, 100, out.ref(4, 4), col);
+        alphaBlend(23, 100, out.ref(4, 3), col);
+        alphaBlend(23, 100, out.ref(3, 4), col);
+    }
+}
+
+const Rot = (function () {
+    /*
+    |0|6|8|2|1|3|
+    |7|5|2|0|6|8|
+    |3|8|5|1|4|4|
+    |4|4|5|1|3|7|
+    |6|8|2|0|7|5|
+    |1|3|8|2|0|7|
+     */
+    let arr = [];
+    const
+        a = 0, b = 1, c = 2,
+        d = 3, e = 4, f = 5,
+        g = 6, h = 7, i = 8;
+
+    const deg0 = [
+        a, b, c,
+        d, e, f,
+        g, h, i
+    ];
+
+    const deg90 = [
+        g, d, a,
+        h, e, b,
+        i, f, c
+    ];
+
+    const deg180 = [
+        i, h, g,
+        f, e, d,
+        c, b, a
+    ];
+
+    const deg270 = [
+        c, f, i,
+        b, e, h,
+        a, d, g
+    ];
+
+    const rotation = [
+        deg0, deg90, deg180, deg270
+    ];
+
+    for (let rotDeg = 0; rotDeg < 4; rotDeg++)
+        for (let x = 0; x < 9; x++)
+            arr[(x << 2) + rotDeg] = rotation[rotDeg][x];
+    return arr;
+})();
+
+const BlendType = {
+    'BLEND_NONE': 0,
+    'BLEND_NORMAL': 1,
+    'BLEND_DOMINANT': 2
+};
+
 
 const blendResult = new BlendResult();
 
@@ -124,11 +217,24 @@ function colorDist(pix1, pix2, luminanceWeight) {
 }
 
 let config = {
-    dominantDirectionThreshold: 3.6
+    dominantDirectionThreshold: 3.6,
+    luminanceWeight: 1.0,
+    equalColorTolerance: 30.0,
+    steepDirectionThreshold: 2.2
 };
 
-function colorDist_(pix1, pix2) {
+function preProcessCorners_colorDist_(pix1, pix2) {
     return colorDist(pix1, pix2, config.dominantDirectionThreshold)
+}
+
+const eqColorThres = square(config.equalColorTolerance);
+
+function scalePixel_colorEq_(col1, col2) {
+    return colorDist(col1, col2, config.luminanceWeight) < eqColorThres
+}
+
+function scalePixel_colorDist_(col1, col2) {
+    return colorDist(col1, col2, config.luminanceWeight)
 }
 
 function blendComponent(mask, n, m, inPixel, setPixel) {
@@ -164,42 +270,304 @@ function buildMatrixRotation(rotDeg, I, J, N) {
     return {I: I_old, J: J_old}
 }
 
+let matrixRotation = (function () {
+    let matrixRotation = [];
+    for (let n = 2; n < maxScale + 1; n++) {
+        for (let r = 0; r < maxRots; r++) {
+            let nr = (n - 2) * (maxRots * maxScaleSq) + r * maxScaleSq;
+            for (let i = 0; i < maxScale; i++) {
+                for (let j = 0; j < maxScale; j++) {
+                    matrixRotation[nr + i * maxScale + j] = buildMatrixRotation(r, i, j, n);
+                }
+            }
+        }
+    }
+    return matrixRotation;
+})();
+
 function preProcessCorners(ker4x4) {
     blendResult.reset();
     if ((ker4x4.f === ker4x4.g && ker4x4.j === ker4x4.k) ||
         (ker4x4.f === ker4x4.j && ker4x4.g === ker4x4.k))
         return;
 
+    const dist = preProcessCorners_colorDist_;
+
     const weight = 4;
     const jg =
-        colorDist_(ker4x4.i, ker4x4.f) +
-        colorDist_(ker4x4.f, ker4x4.c) +
-        colorDist_(ker4x4.n, ker4x4.k) +
-        colorDist_(ker4x4.k, ker4x4.h) +
-        weight * colorDist_(ker4x4.j, ker4x4.g);
+        dist(ker4x4.i, ker4x4.f) +
+        dist(ker4x4.f, ker4x4.c) +
+        dist(ker4x4.n, ker4x4.k) +
+        dist(ker4x4.k, ker4x4.h) +
+        weight * dist(ker4x4.j, ker4x4.g);
     const fk =
-        colorDist_(ker4x4.e, ker4x4.j) +
-        colorDist_(ker4x4.j, ker4x4.o) +
-        colorDist_(ker4x4.b, ker4x4.g) +
-        colorDist_(ker4x4.g, ker4x4.l) +
-        weight * colorDist_(ker4x4.f, ker4x4.k);
+        dist(ker4x4.e, ker4x4.j) +
+        dist(ker4x4.j, ker4x4.o) +
+        dist(ker4x4.b, ker4x4.g) +
+        dist(ker4x4.g, ker4x4.l) +
+        weight * dist(ker4x4.f, ker4x4.k);
 
     if (jg < fk) {
         const dominantGradient = config.dominantDirectionThreshold * jg < fk;
         if (ker4x4.f !== ker4x4.g && ker4x4.f !== ker4x4.j)
-            blendResult.f = dominantGradient ? 'BLEND_DOMINANT' : 'BLEND_NORMAL';
+            blendResult.f = dominantGradient ? BlendType.BLEND_DOMINANT : BlendType.BLEND_NORMAL;
         if (ker4x4.k !== ker4x4.g && ker4x4.k !== ker4x4.j)
-            blendResult.k = dominantGradient ? 'BLEND_DOMINANT' : 'BLEND_NORMAL';
+            blendResult.k = dominantGradient ? BlendType.BLEND_DOMINANT : BlendType.BLEND_NORMAL;
     } else if (fk < jg) {
         const dominantGradient = config.dominantDirectionThreshold * fk < jg;
         if (ker4x4.j !== ker4x4.f && ker4x4.j !== ker4x4.k)
-            blendResult.j = dominantGradient ? 'BLEND_DOMINANT' : 'BLEND_NORMAL';
+            blendResult.j = dominantGradient ? BlendType.BLEND_DOMINANT : BlendType.BLEND_NORMAL;
         if (ker4x4.g !== ker4x4.f && ker4x4.g !== ker4x4.k)
-            blendResult.g = dominantGradient ? 'BLEND_DOMINANT' : 'BLEND_NORMAL';
+            blendResult.g = dominantGradient ? BlendType.BLEND_DOMINANT : BlendType.BLEND_NORMAL;
     }
 }
 
-export function scaleImage() {
-    console.log('placeholder')
+const BlendInfo = {
+    getTopL(b) {
+        return b & 0x3;
+    },
+    getTopR(b) {
+        return (b >> 2) & 0x3;
+    },
+    getBottomR(b) {
+        return (b >> 4) & 0x3;
+    },
+    getBottomL(b) {
+        return (b >> 6) & 0x3;
+    },
+    setTopL(b, bt) {
+        return (b | bt)
+    },
+    setTopR(b, bt) {
+        return (b | bt << 2)
+    },
+    setBottomR(b, bt) {
+        return (b | bt << 4)
+    },
+    setBottomL(b, bt) {
+        return (b | (bt << 6))
+    },
+    rotate(b, rotDeg) {
+        // assert rotDeg >= 0 && rotDeg < 4 : "RotationDegree enum does not have type: " + rotDeg;
+        const l = rotDeg << 1;
+        const r = 8 - l;
+        // todo java 源码是 (char) (b << l | b >> r)
+        return (b << l | b >> r);
+    }
+};
+
+let outputMatrix;
+
+function scalePixel(scaler, rotDeg, ker3x3, trg, trgi, trgWidth, blendInfo) {
+    const b = ker3x3[Rot[(1 << 2) + rotDeg]];
+    const c = ker3x3[Rot[(2 << 2) + rotDeg]];
+    const d = ker3x3[Rot[(3 << 2) + rotDeg]];
+    const e = ker3x3[Rot[(4 << 2) + rotDeg]];
+    const f = ker3x3[Rot[(5 << 2) + rotDeg]];
+    const g = ker3x3[Rot[(6 << 2) + rotDeg]];
+    const h = ker3x3[Rot[(7 << 2) + rotDeg]];
+    const i = ker3x3[Rot[(8 << 2) + rotDeg]];
+
+    const blend = BlendInfo.rotate(blendInfo, rotDeg);
+    if (BlendInfo.getBottomR(blend) === BlendType.BLEND_NONE)
+        return;
+
+    const eq = scalePixel_colorEq_;
+    const dist = scalePixel_colorDist_;
+
+    let doLineBlend;
+
+    if (BlendInfo.getBottomR(blend) >= BlendType.BLEND_DOMINANT)
+        doLineBlend = true;
+    else if (BlendInfo.getTopR(blend) !== BlendType.BLEND_NONE && !eq(e, g))
+        doLineBlend = false;
+    else if (BlendInfo.getBottomL(blend) !== BlendType.BLEND_NONE && !eq(e, c))
+        doLineBlend = false;
+    else if (eq(g, h) && eq(h, i) && eq(i, f) && eq(f, c) && !eq(e, i))
+        doLineBlend = false;
+    else
+        doLineBlend = true;
+
+    const px = dist(e, f) <= dist(e, h) ? f : h;
+
+    const out = outputMatrix;
+    out.move(rotDeg, trgi);
+
+    if (!doLineBlend) {
+        scaler.blendCorner(px, out);
+        return;
+    }
+
+    const fg = dist(f, g);
+    const hc = dist(h, c);
+
+    const haveShallowLine = config.steepDirectionThreshold * fg <= hc && e !== g && d !== g;
+    const haveSteepLine = config.steepDirectionThreshold * hc <= fg && e !== c && b !== c;
+
+    if (haveShallowLine) {
+        if (haveSteepLine) {
+            scaler.blendLineSteepAndShallow(px, out);
+        } else {
+            scaler.blendLineShallow(px, out);
+        }
+    } else {
+        if (haveSteepLine) {
+            scaler.blendLineSteep(px, out);
+        } else {
+            scaler.blendLineDiagonal(px, out);
+        }
+    }
 }
+
+const scaleSize = 5;
+
+export function scaleImage(src, trg, srcWidth, srcHeight, yFirst, yLast) {
+    yFirst = Math.max(yFirst, 0);
+    yLast = Math.min(yLast, srcHeight);
+
+    if (yFirst >= yLast || srcWidth <= 0)
+        return;
+
+    const trgWidth = srcWidth * scaleSize;
+
+    let preProcBuffer = [];
+    let ker4 = {
+        a: 0, b: 0, c: 0, d: 0,
+        e: 0, f: 0, g: 0, h: 0,
+        i: 0, j: 0, k: 0, l: 0,
+        m: 0, n: 0, o: 0, p: 0,
+    };
+
+    if (yFirst > 0) {
+        const y = yFirst - 1;
+        const s_m1 = srcWidth * Math.max(y - 1, 0);
+        const s_0 = srcWidth * y;
+        const s_p1 = srcWidth * Math.min(y + 1, srcHeight - 1);
+        const s_p2 = srcWidth * Math.min(y + 2, srcHeight - 1);
+
+        for (let x = 0; x < srcWidth; ++x) {
+            const x_m1 = Math.max(x - 1, 0);
+            const x_p1 = Math.min(x + 1, srcWidth - 1);
+            const x_p2 = Math.min(x + 2, srcWidth - 1);
+
+            ker4.a = src[s_m1 + x_m1];
+            ker4.b = src[s_m1 + x];
+            ker4.c = src[s_m1 + x_p1];
+            ker4.d = src[s_m1 + x_p2];
+
+            ker4.e = src[s_0 + x_m1];
+            ker4.f = src[s_0 + x];
+            ker4.g = src[s_0 + x_p1];
+            ker4.h = src[s_0 + x_p2];
+
+            ker4.i = src[s_p1 + x_m1];
+            ker4.j = src[s_p1 + x];
+            ker4.k = src[s_p1 + x_p1];
+            ker4.l = src[s_p1 + x_p2];
+
+            ker4.m = src[s_p2 + x_m1];
+            ker4.n = src[s_p2 + x];
+            ker4.o = src[s_p2 + x_p1];
+            ker4.p = src[s_p2 + x_p2];
+
+            preProcessCorners(ker4);
+
+            preProcBuffer[x] = BlendInfo.setTopR(preProcBuffer[x], blendResult.j);
+            if (x + 1 < srcWidth)
+                preProcBuffer[x + 1] = BlendInfo.setTopL(preProcBuffer[x + 1], blendResult.k);
+        }
+    }
+
+    outputMatrix = new OutputMatrix(scaleSize, trg, trgWidth);
+
+    let blend_xy = 0;
+    let blend_xy1 = 0;
+
+    let ker3 = [];
+
+    for (let y = yFirst; y < yLast; ++y) {
+        let trgi = scaleSize * y * trgWidth;
+        const s_m1 = srcWidth * Math.max(y - 1, 0);
+        const s_0 = srcWidth * y;
+        const s_p1 = srcWidth * Math.min(y + 1, srcHeight - 1);
+        const s_p2 = srcWidth * Math.min(y + 2, srcHeight - 1);
+
+        blend_xy1 = 0;
+
+        for (let x = 0; x < srcWidth; ++x, trgi += scaleSize) {
+            const x_m1 = Math.max(x - 1, 0);
+            const x_p1 = Math.min(x + 1, srcWidth - 1);
+            const x_p2 = Math.min(x + 2, srcWidth - 1);
+            {
+                ker4.a = src[s_m1 + x_m1];
+                ker4.b = src[s_m1 + x];
+                ker4.c = src[s_m1 + x_p1];
+                ker4.d = src[s_m1 + x_p2];
+
+                ker4.e = src[s_0 + x_m1];
+                ker4.f = src[s_0 + x];
+                ker4.g = src[s_0 + x_p1];
+                ker4.h = src[s_0 + x_p2];
+
+                ker4.i = src[s_p1 + x_m1];
+                ker4.j = src[s_p1 + x];
+                ker4.k = src[s_p1 + x_p1];
+                ker4.l = src[s_p1 + x_p2];
+
+                ker4.m = src[s_p2 + x_m1];
+                ker4.n = src[s_p2 + x];
+                ker4.o = src[s_p2 + x_p1];
+                ker4.p = src[s_p2 + x_p2];
+                preProcessCorners(ker4);
+
+                blend_xy = BlendInfo.setBottomR(preProcBuffer[x], blendResult.f);
+                blend_xy1 = BlendInfo.setTopR(blend_xy1, blendResult.j);
+                preProcBuffer[x] = blend_xy1;
+
+                blend_xy1 = BlendInfo.setTopL(0, blendResult.k);
+                if (x + 1 < srcWidth)
+                    preProcBuffer[x + 1] = BlendInfo.setBottomL(preProcBuffer[x + 1], blendResult.g);
+            }
+
+            fillBlock(trg, trgi, trgWidth, src[s_0 + x], scaleSize);
+
+            if (blend_xy === 0)
+                continue;
+
+            const a = 0, b = 1, c = 2, d = 3, e = 4, f = 5, g = 6, h = 7, i = 8;
+
+            ker3[a] = src[s_m1 + x_m1];
+            ker3[b] = src[s_m1 + x];
+            ker3[c] = src[s_m1 + x_p1];
+
+            ker3[d] = src[s_0 + x_m1];
+            ker3[e] = src[s_0 + x];
+            ker3[f] = src[s_0 + x_p1];
+
+            ker3[g] = src[s_p1 + x_m1];
+            ker3[h] = src[s_p1 + x];
+            ker3[i] = src[s_p1 + x_p1];
+
+            const scaler = new Scaler();
+
+            scalePixel(scaler, 0, ker3, trg, trgi, trgWidth, blend_xy);
+            scalePixel(scaler, 1, ker3, trg, trgi, trgWidth, blend_xy);
+            scalePixel(scaler, 2, ker3, trg, trgi, trgWidth, blend_xy);
+            scalePixel(scaler, 3, ker3, trg, trgi, trgWidth, blend_xy);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
