@@ -6,7 +6,7 @@
 </head>
 <body>
 <canvas id="canvas"></canvas>
-<canvas id="canvas5x"></canvas>
+<canvas id="canvasScale"></canvas>
 <script type="module">
     import {scaleImage} from './src/xBRZ.js'
     // scaleImage()
@@ -14,8 +14,8 @@
     const canvas = document.querySelector('#canvas');
     const ctx = canvas.getContext('2d');
 
-    const canvas5x = document.querySelector('#canvas5x');
-    const ctx5x = canvas5x.getContext('2d');
+    const canvasScale = document.querySelector('#canvasScale');
+    const ctxScale = canvasScale.getContext('2d');
 
     const srcImage = new Image();
     srcImage.src = './ok.png';
@@ -36,28 +36,29 @@
             pixels.push(pixel)
         }
         let tar = [];
-        scaleImage(pixels, tar, width, height, 0, height);
+        const scaleSize = 6;
+        scaleImage(scaleSize, pixels, tar, width, height, 0, height);
 
-        let buffer5x = [];
+        let bufferScale = [];
         for (let i = 0, len = tar.length; i < len; ++i) {
             const pixel = tar[i];
             const r = pixel & 0xff;
             const g = (pixel >> 8) & 0xff;
             const b = (pixel >> 16) & 0xff;
             const a = (pixel >> 24) & 0xff;
-            buffer5x.push(r);
-            buffer5x.push(g);
-            buffer5x.push(b);
-            buffer5x.push(a);
+            bufferScale.push(r);
+            bufferScale.push(g);
+            bufferScale.push(b);
+            bufferScale.push(a);
         }
 
-        const width5x = width * 5;
-        const height5x = height * 5;
-        canvas5x.width = width5x;
-        canvas5x.height = height5x;
-        const img5xBuffer = new Uint8ClampedArray(buffer5x);
-        const img5xData = new ImageData(img5xBuffer, width5x, height5x);
-        ctx5x.putImageData(img5xData, 0, 0)
+        const widthScale = width * scaleSize;
+        const heightScale = height * scaleSize;
+        canvasScale.width = widthScale;
+        canvasScale.height = heightScale;
+        const imgScaleBuffer = new Uint8ClampedArray(bufferScale);
+        const imgScaleData = new ImageData(imgScaleBuffer, widthScale, heightScale);
+        ctxScale.putImageData(imgScaleData, 0, 0)
     }
 </script>
 </body>
