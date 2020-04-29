@@ -18,7 +18,7 @@
     const ctxScale = canvasScale.getContext('2d');
 
     const srcImage = new Image();
-    srcImage.src = './ok.png';
+    srcImage.src = './okmini4.png';
     srcImage.onload = () => {
         const {width, height} = srcImage;
         canvas.width = width;
@@ -36,7 +36,7 @@
             pixels.push(pixel)
         }
         let tar = [];
-        const scaleSize = 6;
+        const scaleSize = 5;
         scaleImage(scaleSize, pixels, tar, width, height, 0, height);
 
         let bufferScale = [];
