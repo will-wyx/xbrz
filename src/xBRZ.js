@@ -324,35 +324,34 @@ function preProcessCorners(ker4x4) {
 
 const BlendInfo = {
     getTopL(b) {
-        return b & 0x3;
+        return (b & 0x3) & 0xff;
     },
     getTopR(b) {
-        return (b >> 2) & 0x3;
+        return ((b >> 2) & 0x3) & 0xff;
     },
     getBottomR(b) {
-        return (b >> 4) & 0x3;
+        return ((b >> 4) & 0x3) & 0xff;
     },
     getBottomL(b) {
-        return (b >> 6) & 0x3;
+        return ((b >> 6) & 0x3) & 0xff;
     },
     setTopL(b, bt) {
-        return (b | bt)
+        return (b | bt) & 0xff
     },
     setTopR(b, bt) {
-        return (b | bt << 2)
+        return (b | bt << 2) & 0xff
     },
     setBottomR(b, bt) {
-        return (b | bt << 4)
+        return (b | bt << 4) & 0xff
     },
     setBottomL(b, bt) {
-        return (b | (bt << 6))
+        return (b | (bt << 6)) & 0xff
     },
     rotate(b, rotDeg) {
         // assert rotDeg >= 0 && rotDeg < 4 : "RotationDegree enum does not have type: " + rotDeg;
         const l = rotDeg << 1;
         const r = 8 - l;
-        // todo java 源码是 (char) (b << l | b >> r)
-        return (b << l | b >> r);
+        return (b << l | b >> r) & 0xff;
     }
 };
 
@@ -474,7 +473,7 @@ export function scaleImage(src, trg, srcWidth, srcHeight, yFirst, yLast) {
 
             preProcBuffer[x] = BlendInfo.setTopR(preProcBuffer[x], blendResult.j);
             if (x + 1 < srcWidth)
-                preProcBuffer[x + 1] = BlendInfo.setTopL(preProcBuffer[x + 1], blendResult.k);
+                preProcBuffer[x + 1] = BlendInfo.setTopL(preProcBuffer[x + 1] & 0xff, blendResult.k);
         }
     }
 
