@@ -653,9 +653,9 @@ export function scaleImage(scaleSize, src, trg, srcWidth, srcHeight, yFirst, yLa
                     break;
             }
 
-            // scalePixel(scaler, 0, ker3, trg, trgi, trgWidth, blend_xy);
+            scalePixel(scaler, 0, ker3, trg, trgi, trgWidth, blend_xy);
             scalePixel(scaler, 1, ker3, trg, trgi, trgWidth, blend_xy);
-            // scalePixel(scaler, 2, ker3, trg, trgi, trgWidth, blend_xy);
+            scalePixel(scaler, 2, ker3, trg, trgi, trgWidth, blend_xy);
             scalePixel(scaler, 3, ker3, trg, trgi, trgWidth, blend_xy);
         }
     }
