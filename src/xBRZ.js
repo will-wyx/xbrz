@@ -161,6 +161,7 @@ class Scaler5x {
     }
 
     blendLineShallow(col, out) {
+        // **
         alphaBlend(1, 4, out.ref(this.scale - 1, 0), col);
         alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
         alphaBlend(1, 4, out.ref(this.scale - 3, 4), col);
@@ -203,6 +204,7 @@ class Scaler5x {
     }
 
     blendLineDiagonal(col, out) {
+        // **
         alphaBlend(1, 8, out.ref(this.scale - 1, this.scale / 2), col);
         alphaBlend(1, 8, out.ref(this.scale - 2, this.scale / 2 + 1), col);
         alphaBlend(1, 8, out.ref(this.scale - 3, this.scale / 2 + 2), col);
@@ -651,9 +653,9 @@ export function scaleImage(scaleSize, src, trg, srcWidth, srcHeight, yFirst, yLa
                     break;
             }
 
-            scalePixel(scaler, 0, ker3, trg, trgi, trgWidth, blend_xy);
+            // scalePixel(scaler, 0, ker3, trg, trgi, trgWidth, blend_xy);
             scalePixel(scaler, 1, ker3, trg, trgi, trgWidth, blend_xy);
-            scalePixel(scaler, 2, ker3, trg, trgi, trgWidth, blend_xy);
+            // scalePixel(scaler, 2, ker3, trg, trgi, trgWidth, blend_xy);
             scalePixel(scaler, 3, ker3, trg, trgi, trgWidth, blend_xy);
         }
     }
