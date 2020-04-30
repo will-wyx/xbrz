@@ -26,26 +26,27 @@
         ctx.drawImage(srcImage, 0, 0, width, height);
         const imageData = ctx.getImageData(0, 0, width, height);
         const buffer = Array.from(imageData.data);
-        let pixels = [];
+        let source = [];
         for (let i = 0, len = buffer.length; i < len; i += 4) {
             const r = buffer[i];
             const g = buffer[i + 1];
             const b = buffer[i + 2];
             const a = buffer[i + 3];
-            const pixel = r << 24 | g << 16 | b << 8 | a;
-            pixels.push(pixel)
+            const pixel = a << 24 | r << 16 | g << 8 | b;
+            source.push(pixel)
         }
-        let tar = [];
+        let target = [];
         const scaleSize = 5;
-        scaleImage(scaleSize, pixels, tar, width, height, 0, height);
+        console.log(source);
+        scaleImage(scaleSize, source, target, width, height, 0, height);
 
         let bufferScale = [];
-        for (let i = 0, len = tar.length; i < len; ++i) {
-            const pixel = tar[i];
-            const r = (pixel >> 24) & 0xff;
-            const g = (pixel >> 16) & 0xff;
-            const b = (pixel >> 8) & 0xff;
-            const a = (pixel) & 0xff;
+        for (let i = 0, len = target.length; i < len; ++i) {
+            const pixel = target[i];
+            const a = (pixel >> 24) & 0xff;
+            const r = (pixel >> 16) & 0xff;
+            const g = (pixel >> 8) & 0xff;
+            const b = (pixel) & 0xff;
             bufferScale.push(r);
             bufferScale.push(g);
             bufferScale.push(b);
