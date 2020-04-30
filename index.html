@@ -35,9 +35,9 @@
             const pixel = a << 24 | r << 16 | g << 8 | b;
             source.push(pixel)
         }
-        let target = [];
-        const scaleSize = 5;
-        console.log(source);
+        const scaleSize = 6;
+        let target = new Array(width * scaleSize * height * scaleSize);
+        target.fill(0);
         scaleImage(scaleSize, source, target, width, height, 0, height);
 
         let bufferScale = [];

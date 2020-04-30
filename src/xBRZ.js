@@ -119,6 +119,7 @@ class Scaler6x {
         alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
         alphaBlend(3, 4, out.ref(this.scale - 1, 1), col);
         alphaBlend(3, 4, out.ref(this.scale - 2, 3), col);
+
         out.ref(2, this.scale - 1).set(col);
         out.ref(3, this.scale - 1).set(col);
         out.ref(4, this.scale - 1).set(col);
@@ -187,14 +188,18 @@ class Scaler5x {
         alphaBlend(1, 4, out.ref(0, this.scale - 1), col);
         alphaBlend(1, 4, out.ref(2, this.scale - 2), col);
         alphaBlend(3, 4, out.ref(1, this.scale - 1), col);
+
         alphaBlend(1, 4, out.ref(this.scale - 1, 0), col);
         alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
         alphaBlend(3, 4, out.ref(this.scale - 1, 1), col);
+        alphaBlend(2, 3, out.ref(3, 3), col)
+
         out.ref(2, this.scale - 1).set(col);
         out.ref(3, this.scale - 1).set(col);
+        out.ref(4, this.scale - 1).set(col);
+
         out.ref(this.scale - 1, 2).set(col);
         out.ref(this.scale - 1, 3).set(col);
-        alphaBlend(2, 3, out.ref(3, 3), col)
     }
 
     blendLineDiagonal(col, out) {
@@ -309,8 +314,10 @@ let config = {
     steepDirectionThreshold: 2.2
 };
 
-function preProcessCorners_colorDist_(pix1, pix2) {
-    return colorDist(pix1, pix2, config.dominantDirectionThreshold)
+function preProcessCorners_colorDist_(col1, col2) {
+    col1 = col1 & 0xffffffff;
+    col2 = col2 & 0xffffffff;
+    return colorDist(col1, col2, config.luminanceWeight)
 }
 
 const eqColorThres = square(config.equalColorTolerance);
