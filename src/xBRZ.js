@@ -1,5 +1,5 @@
-import Scaler6x from "./scalers/Scaler6x";
-import Scaler5x from "./scalers/Scaler5x";
+import {Scaler6x, Scaler5x, Scaler4x, Scaler3x, Scaler2x} from "./scalers";
+
 const redMask = 0xff0000;
 const greenMask = 0x00ff00;
 const blueMask = 0x0000ff;
@@ -469,6 +469,15 @@ export function scaleImage(scaleSize, src, trg, srcWidth, srcHeight, yFirst, yLa
 
             let scaler;
             switch (scaleSize) {
+                case 2:
+                    scaler = new Scaler2x();
+                    break;
+                case 3:
+                    scaler = new Scaler3x();
+                    break;
+                case 4:
+                    scaler = new Scaler4x();
+                    break;
                 case 5:
                     scaler = new Scaler5x();
                     break;
