@@ -1,3 +1,5 @@
+import Scaler6x from "./scalers/Scaler6x";
+import Scaler5x from "./scalers/Scaler5x";
 const redMask = 0xff0000;
 const greenMask = 0x00ff00;
 const blueMask = 0x0000ff;
@@ -64,161 +66,6 @@ class OutputMatrix {
     }
 }
 
-class Scaler6x {
-    constructor() {
-        this.scale = 6;
-    }
-
-    scale() {
-        return this.scale
-    }
-
-    blendLineShallow(col, out) {
-        alphaBlend(1, 4, out.ref(this.scale - 1, 0), col);
-        alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
-        alphaBlend(1, 4, out.ref(this.scale - 3, 4), col);
-
-        alphaBlend(3, 4, out.ref(this.scale - 1, 1), col);
-        alphaBlend(3, 4, out.ref(this.scale - 2, 3), col);
-        alphaBlend(3, 4, out.ref(this.scale - 3, 5), col);
-
-        out.ref(this.scale - 1, 2).set(col);
-        out.ref(this.scale - 1, 3).set(col);
-        out.ref(this.scale - 1, 4).set(col);
-        out.ref(this.scale - 1, 5).set(col);
-
-        out.ref(this.scale - 2, 4).set(col);
-        out.ref(this.scale - 2, 5).set(col);
-    }
-
-    blendLineSteep(col, out) {
-        alphaBlend(1, 4, out.ref(0, this.scale - 1), col);
-        alphaBlend(1, 4, out.ref(2, this.scale - 2), col);
-        alphaBlend(1, 4, out.ref(4, this.scale - 3), col);
-
-        alphaBlend(3, 4, out.ref(1, this.scale - 1), col);
-        alphaBlend(3, 4, out.ref(3, this.scale - 2), col);
-        alphaBlend(3, 4, out.ref(5, this.scale - 3), col);
-
-        out.ref(2, this.scale - 1).set(col);
-        out.ref(3, this.scale - 1).set(col);
-        out.ref(4, this.scale - 1).set(col);
-        out.ref(5, this.scale - 1).set(col);
-
-        out.ref(4, this.scale - 2).set(col);
-        out.ref(5, this.scale - 2).set(col);
-    }
-
-    blendLineSteepAndShallow(col, out) {
-        alphaBlend(1, 4, out.ref(0, this.scale - 1), col);
-        alphaBlend(1, 4, out.ref(2, this.scale - 2), col);
-        alphaBlend(3, 4, out.ref(1, this.scale - 1), col);
-        alphaBlend(3, 4, out.ref(3, this.scale - 2), col);
-
-        alphaBlend(1, 4, out.ref(this.scale - 1, 0), col);
-        alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
-        alphaBlend(3, 4, out.ref(this.scale - 1, 1), col);
-        alphaBlend(3, 4, out.ref(this.scale - 2, 3), col);
-
-        out.ref(2, this.scale - 1).set(col);
-        out.ref(3, this.scale - 1).set(col);
-        out.ref(4, this.scale - 1).set(col);
-        out.ref(5, this.scale - 1).set(col);
-
-        out.ref(4, this.scale - 2).set(col);
-        out.ref(5, this.scale - 2).set(col);
-
-        out.ref(this.scale - 1, 2).set(col);
-        out.ref(this.scale - 1, 3).set(col);
-    }
-
-    blendLineDiagonal(col, out) {
-        alphaBlend(1, 2, out.ref(this.scale - 1, this.scale / 2), col);
-        alphaBlend(1, 2, out.ref(this.scale - 2, this.scale / 2 + 1), col);
-        alphaBlend(1, 2, out.ref(this.scale - 3, this.scale / 2 + 2), col);
-
-        out.ref(this.scale - 2, this.scale - 1).set(col);
-        out.ref(this.scale - 1, this.scale - 1).set(col);
-        out.ref(this.scale - 1, this.scale - 2).set(col)
-    }
-
-    blendCorner(col, out) {
-        alphaBlend(97, 100, out.ref(5, 5), col);
-        alphaBlend(42, 100, out.ref(4, 5), col);
-        alphaBlend(42, 100, out.ref(5, 4), col);
-        alphaBlend(6, 100, out.ref(5, 3), col);
-        alphaBlend(6, 100, out.ref(3, 5), col);
-    }
-}
-
-class Scaler5x {
-    constructor() {
-        this.scale = 5;
-    }
-
-    scale() {
-        return this.scale
-    }
-
-    blendLineShallow(col, out) {
-        // **
-        alphaBlend(1, 4, out.ref(this.scale - 1, 0), col);
-        alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
-        alphaBlend(1, 4, out.ref(this.scale - 3, 4), col);
-        alphaBlend(3, 4, out.ref(this.scale - 1, 1), col);
-        alphaBlend(3, 4, out.ref(this.scale - 2, 3), col);
-        out.ref(this.scale - 1, 2).set(col);
-        out.ref(this.scale - 1, 3).set(col);
-        out.ref(this.scale - 1, 4).set(col);
-        out.ref(this.scale - 2, 4).set(col);
-    }
-
-    blendLineSteep(col, out) {
-        alphaBlend(1, 4, out.ref(0, this.scale - 1), col);
-        alphaBlend(1, 4, out.ref(2, this.scale - 2), col);
-        alphaBlend(1, 4, out.ref(4, this.scale - 3), col);
-        alphaBlend(3, 4, out.ref(1, this.scale - 1), col);
-        alphaBlend(3, 4, out.ref(3, this.scale - 2), col);
-        out.ref(2, this.scale - 1).set(col);
-        out.ref(3, this.scale - 1).set(col);
-        out.ref(4, this.scale - 1).set(col);
-        out.ref(4, this.scale - 2).set(col);
-    }
-
-    blendLineSteepAndShallow(col, out) {
-        alphaBlend(1, 4, out.ref(0, this.scale - 1), col);
-        alphaBlend(1, 4, out.ref(2, this.scale - 2), col);
-        alphaBlend(3, 4, out.ref(1, this.scale - 1), col);
-
-        alphaBlend(1, 4, out.ref(this.scale - 1, 0), col);
-        alphaBlend(1, 4, out.ref(this.scale - 2, 2), col);
-        alphaBlend(3, 4, out.ref(this.scale - 1, 1), col);
-        alphaBlend(2, 3, out.ref(3, 3), col)
-
-        out.ref(2, this.scale - 1).set(col);
-        out.ref(3, this.scale - 1).set(col);
-        out.ref(4, this.scale - 1).set(col);
-
-        out.ref(this.scale - 1, 2).set(col);
-        out.ref(this.scale - 1, 3).set(col);
-    }
-
-    blendLineDiagonal(col, out) {
-        // **
-        alphaBlend(1, 8, out.ref(this.scale - 1, this.scale / 2), col);
-        alphaBlend(1, 8, out.ref(this.scale - 2, this.scale / 2 + 1), col);
-        alphaBlend(1, 8, out.ref(this.scale - 3, this.scale / 2 + 2), col);
-        alphaBlend(7, 8, out.ref(4, 3), col);
-        alphaBlend(7, 8, out.ref(3, 4), col);
-        out.ref(4, 4).set(col)
-    }
-
-    blendCorner(col, out) {
-        alphaBlend(86, 100, out.ref(4, 4), col);
-        alphaBlend(23, 100, out.ref(4, 3), col);
-        alphaBlend(23, 100, out.ref(3, 4), col);
-    }
-}
 
 const Rot = (function () {
     /*
@@ -330,26 +177,6 @@ function scalePixel_colorEq_(col1, col2) {
 
 function scalePixel_colorDist_(col1, col2) {
     return colorDist(col1, col2, config.luminanceWeight)
-}
-
-function blendComponent(mask, n, m, inPixel, setPixel) {
-    const inChan = inPixel & mask;
-    const setChan = setPixel & mask;
-    const blend = setChan * n + inChan * (m - n);
-    return mask & (blend / m);
-}
-
-function alphaBlend(n, m, dstPtr, col) {
-    // assert n < 256 : "possible overflow of (col & redMask) * N";
-    // assert m < 256 : "possible overflow of (col & redMask) * N + (dst & redMask) * (M - N)";
-    // assert 0 < n && n < m : "0 < N && N < M";
-
-    const dst = dstPtr.get();
-    const redComponent = blendComponent(redMask, n, m, dst, col);
-    const greenComponent = blendComponent(greenMask, n, m, dst, col);
-    const blueComponent = blendComponent(blueMask, n, m, dst, col);
-    const blend = (redComponent | greenComponent | blueComponent);
-    dstPtr.set(blend | 0xff000000);
 }
 
 function buildMatrixRotation(rotDeg, I, J, N) {
