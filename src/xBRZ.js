@@ -1,4 +1,4 @@
-import {Scaler6x, Scaler5x, Scaler4x, Scaler3x, Scaler2x} from "./scalers";
+import {Scaler6x, Scaler5x, Scaler4x, Scaler3x, Scaler2x} from "./scalers/index.js";
 
 const redMask = 0xff0000;
 const greenMask = 0x00ff00;

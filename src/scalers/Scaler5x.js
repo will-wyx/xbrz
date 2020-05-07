@@ -1,4 +1,4 @@
-import {alphaBlend} from "./Blender";
+import {alphaBlend} from "./Blender.js";
 
 export default class Scaler5x {
     constructor() {
