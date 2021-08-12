@@ -14,4 +14,4 @@ xBRZ: "Scale by rules" - high quality image upscaling filter by Zenju
 
 <img src="./target.png" alt="target">
 
-[Demo](https://intrepidis.blogspot.com/2014/02/xbrz-in-java.html)
+[Demo](https://will-wyx.github.io/xbrz/)
